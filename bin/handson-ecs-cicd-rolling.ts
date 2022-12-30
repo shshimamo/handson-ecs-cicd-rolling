@@ -56,5 +56,6 @@ new BackendServiceNodejsStack(app, `${Context.ID_PREFIX}-BackendServiceNodejsSta
 new FrontendPipelineStack(app, `${Context.ID_PREFIX}-FrontendPipelineStack`, {
     env: {account: process.env.CDK_DEFAULT_ACCOUNT, region: process.env.CDK_DEFAULT_REGION},
     ecsDeploymentGroup: frontendService.ecsDeploymentGroup,
-    buildProjectLogGroup: infra.frontendBuildProjectLogGroup
+    buildProjectLogGroup: infra.frontendBuildProjectLogGroup,
+    frontendService: frontendService.frontendService,
 })

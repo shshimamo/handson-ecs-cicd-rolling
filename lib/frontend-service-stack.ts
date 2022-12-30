@@ -25,6 +25,7 @@ interface FrontendServiceStackProps extends cdk.StackProps {
 
 export class FrontendServiceStack extends cdk.Stack {
     public readonly ecsDeploymentGroup: codedeploy.EcsDeploymentGroup
+    public readonly frontendService: ecs.FargateService
 
     constructor(scope: Construct, id: string, props: FrontendServiceStackProps) {
         super(scope, id, props);
@@ -72,10 +73,10 @@ export class FrontendServiceStack extends cdk.Stack {
         });
 
         // ECS サービス
-        const frontendService = new ecs.FargateService(this, 'FrontendService', {
+        this.frontendService = new ecs.FargateService(this, 'FrontendService', {
             serviceName: `${Context.USER_NAME}-ecsdemo-frontend`,
             cluster: props.cluster,
-            desiredCount: 1,
+            desiredCount: 3,
             assignPublicIp: true,
             taskDefinition: frontTaskDefinition,
             enableExecuteCommand: true,
@@ -87,36 +88,11 @@ export class FrontendServiceStack extends cdk.Stack {
             },
             securityGroups: [props.frontendServiceSG],
             deploymentController: {
-                type: ecs.DeploymentControllerType.CODE_DEPLOY,
+                type: ecs.DeploymentControllerType.ECS,
             }
         });
 
         // サービスをターゲットグループに追加
-        props.blueTargetGroup.addTarget(frontendService);
-
-        // CodeDeploy の ECS アプリケーションを作成
-        const ecsApplication = new codedeploy.EcsApplication(this, 'EcsApplication', {
-            applicationName: `${Context.ID_PREFIX}FrontendApplication`,
-        });
-
-        // デプロイグループ
-        this.ecsDeploymentGroup = new codedeploy.EcsDeploymentGroup(this, 'EcsDeploymentGroup', {
-            blueGreenDeploymentConfig: {  // ターゲットグループやリスナー
-                blueTargetGroup: props.blueTargetGroup,
-                greenTargetGroup: props.greenTargetGroup,
-                listener: props.frontListener,
-                testListener: props.frontTestListener,
-                deploymentApprovalWaitTime: cdk.Duration.minutes(10),
-                terminationWaitTime: cdk.Duration.minutes(10),
-            },
-            autoRollback: {  // ロールバックの設定
-                failedDeployment: true
-            },
-            service: frontendService,  // ECSサービス
-            application: ecsApplication,  // ECSアプリケーション
-            deploymentConfig: codedeploy.EcsDeploymentConfig.ALL_AT_ONCE, // デプロイの方式
-            deploymentGroupName: `${Context.ID_PREFIX}FrontendDepGrp`,
-        })
-
+        props.blueTargetGroup.addTarget(this.frontendService);
     }
 }

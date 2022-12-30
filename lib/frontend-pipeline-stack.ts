@@ -3,6 +3,7 @@ import * as codebuild from 'aws-cdk-lib/aws-codebuild';
 import * as codedeploy from 'aws-cdk-lib/aws-codedeploy';
 import * as codepipeline from 'aws-cdk-lib/aws-codepipeline';
 import * as codepipeline_actions from 'aws-cdk-lib/aws-codepipeline-actions';
+import * as ecs from 'aws-cdk-lib/aws-ecs';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as logs from 'aws-cdk-lib/aws-logs';
 import { Construct } from 'constructs';
@@ -10,7 +11,8 @@ import { Context } from './common/context'
 
 interface FrontendPipelineStackProps extends cdk.StackProps {
     ecsDeploymentGroup: codedeploy.EcsDeploymentGroup,
-    buildProjectLogGroup: logs.LogGroup
+    buildProjectLogGroup: logs.LogGroup,
+    frontendService: ecs.FargateService
 }
 
 export class FrontendPipelineStack extends cdk.Stack {
@@ -25,7 +27,7 @@ export class FrontendPipelineStack extends cdk.Stack {
         const sourceAction = new codepipeline_actions.GitHubSourceAction ({
             actionName: 'GitHub_Source',
             owner: 'shshimamo',
-            repo: 'handsonuser-ecsdemo-frontend',
+            repo: `${Context.USER_NAME}-ecsdemo-frontend`,
             branch: 'main',
             oauthToken: cdk.SecretValue.secretsManager('my-github-token'),
             trigger: codepipeline_actions.GitHubTrigger.WEBHOOK,
@@ -84,20 +86,11 @@ export class FrontendPipelineStack extends cdk.Stack {
         });
 
         // デプロイアクション
-        const deployAction = new codepipeline_actions.CodeDeployEcsDeployAction({
-            actionName: `${Context.ID_PREFIX}-frontend-deploy`,
-            deploymentGroup: props.ecsDeploymentGroup,
-
-            // the properties below are optional
-            taskDefinitionTemplateInput: sourceOutput, // タスク定義
-            appSpecTemplateInput: sourceOutput, // AppSpecファイル
-            containerImageInputs: [{
-                input: buildOutput,
-
-                // the properties below are optional
-                taskDefinitionPlaceholder: 'IMAGE1_NAME',
-            }],
-            variablesNamespace: 'DeployVariables'
+        const deployAction = new codepipeline_actions.EcsDeployAction({
+            actionName: `${Context.ID_PREFIX}-frontend-deploy-rolling-update`,
+            input: buildOutput,
+            service: props.frontendService,
+            deploymentTimeout: cdk.Duration.minutes(10)
         })
         pipeline.addStage({
             stageName: 'Deploy',
