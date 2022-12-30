@@ -32,6 +32,7 @@ export class InfrastructureStack extends cdk.Stack {
 
         // create a VPC
         const vpc = new ec2.Vpc(this, 'VPC', {
+            vpcName: `${Context.ID_PREFIX}-VPC`,
             cidr: '10.0.0.0/16',
             maxAzs: 3,
             subnetConfiguration: [
