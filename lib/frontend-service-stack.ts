@@ -18,13 +18,10 @@ interface FrontendServiceStackProps extends cdk.StackProps {
     frontendLogGroup: logs.LogGroup,
     cloudmapNamespace: servicediscovery.PrivateDnsNamespace,
     blueTargetGroup: elbv2.ApplicationTargetGroup,
-    greenTargetGroup: elbv2.ApplicationTargetGroup,
     frontListener: elbv2.ApplicationListener,
-    frontTestListener: elbv2.ApplicationListener
 }
 
 export class FrontendServiceStack extends cdk.Stack {
-    public readonly ecsDeploymentGroup: codedeploy.EcsDeploymentGroup
     public readonly frontendService: ecs.FargateService
 
     constructor(scope: Construct, id: string, props: FrontendServiceStackProps) {

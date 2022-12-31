@@ -28,9 +28,7 @@ const frontendService = new FrontendServiceStack(app, `${Context.ID_PREFIX}-Fron
     frontendLogGroup: infra.frontendLogGroup,
     cloudmapNamespace: infra.cloudmapNamespace,
     blueTargetGroup: infra.blueTargetGroup,
-    greenTargetGroup: infra.greenTargetGroup,
     frontListener: infra.frontListener,
-    frontTestListener: infra.frontTestListener,
 });
 
 new BackendServiceCrystalStack(app, `${Context.ID_PREFIX}-BackendServiceCrystalStack`, {
@@ -55,7 +53,6 @@ new BackendServiceNodejsStack(app, `${Context.ID_PREFIX}-BackendServiceNodejsSta
 
 new FrontendPipelineStack(app, `${Context.ID_PREFIX}-FrontendPipelineStack`, {
     env: {account: process.env.CDK_DEFAULT_ACCOUNT, region: process.env.CDK_DEFAULT_REGION},
-    ecsDeploymentGroup: frontendService.ecsDeploymentGroup,
     buildProjectLogGroup: infra.frontendBuildProjectLogGroup,
     frontendService: frontendService.frontendService,
 })

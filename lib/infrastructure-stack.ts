@@ -22,9 +22,7 @@ export class InfrastructureStack extends cdk.Stack {
     public readonly backendNodejsLogGroup: logs.LogGroup;
     public readonly frontendBuildProjectLogGroup: logs.LogGroup;
     public readonly blueTargetGroup: elbv2.ApplicationTargetGroup;
-    public readonly greenTargetGroup: elbv2.ApplicationTargetGroup;
     public readonly frontListener: elbv2.ApplicationListener;
-    public readonly frontTestListener: elbv2.ApplicationListener;
 
 
     constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -171,28 +169,6 @@ export class InfrastructureStack extends cdk.Stack {
         })
         this.frontListener.addTargetGroups('Add-Blue-TargetGroup', {
             targetGroups: [this.blueTargetGroup],
-        })
-
-        // Green リスナー
-        this.frontTestListener = ecsAlb.addListener('FrontTest-Listener', {
-            protocol: elbv2.ApplicationProtocol.HTTP,
-            port: 9000,
-            open: true,
-        })
-
-        // Green TG
-        this.greenTargetGroup = new elbv2.ApplicationTargetGroup(this, 'Green-TargetGroup', {
-            vpc,
-            targetGroupName: `${Context.ID_PREFIX}-Green-TargetGroup`,
-            protocol: elbv2.ApplicationProtocol.HTTP,
-            port: 3000,
-            healthCheck: {
-                path: '/health',
-            },
-            targetType: elbv2.TargetType.IP,
-        })
-        this.frontTestListener.addTargetGroups('Add-Green-TargetGroup', {
-            targetGroups: [this.greenTargetGroup],
         })
 
         // ECS cluster

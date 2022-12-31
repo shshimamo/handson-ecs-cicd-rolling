@@ -10,7 +10,6 @@ import { Construct } from 'constructs';
 import { Context } from './common/context'
 
 interface FrontendPipelineStackProps extends cdk.StackProps {
-    ecsDeploymentGroup: codedeploy.EcsDeploymentGroup,
     buildProjectLogGroup: logs.LogGroup,
     frontendService: ecs.FargateService
 }
@@ -88,6 +87,8 @@ export class FrontendPipelineStack extends cdk.Stack {
         // デプロイアクション
         const deployAction = new codepipeline_actions.EcsDeployAction({
             actionName: `${Context.ID_PREFIX}-frontend-deploy-rolling-update`,
+            // imagedefinitions.json を期待
+            //   [{"name":"%s","imageUri":"%s"}]
             input: buildOutput,
             service: props.frontendService,
             deploymentTimeout: cdk.Duration.minutes(10)
